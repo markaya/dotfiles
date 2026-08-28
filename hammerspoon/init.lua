@@ -1,3 +1,9 @@
+-- Keep the Mac awake (menubar toggle); starts enabled so the machine won't
+-- lock or sleep until you click the icon to turn it off.
+hs.loadSpoon("Caffeine")
+spoon.Caffeine:start()
+spoon.Caffeine:setState(true)
+
 -- Helper function to launch, focus, or cycle windows of an app
 function toggleOrCycleApp(bundleID)
     local app = hs.application.get(bundleID)

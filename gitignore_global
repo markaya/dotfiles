@@ -4,3 +4,5 @@
 .bsp
 .java-version
 .vscode
+
+**/.claude/settings.local.json
