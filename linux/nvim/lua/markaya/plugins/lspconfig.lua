@@ -39,11 +39,6 @@ return {
             },
           },
         },
-        zk = {
-          auto_attach = {
-            enabled = true,
-          },
-        },
       },
     },
     config = function(_, opts)

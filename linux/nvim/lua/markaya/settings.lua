@@ -1,3 +1,5 @@
+require('markaya.remote_clipboard').setup()
+
 vim.g.mapleader = ' '
 vim.g.maplocalleader = [[\]]
 vim.g.have_nerd_font = true
@@ -97,6 +99,13 @@ vim.api.nvim_create_autocmd('FileType', {
   pattern = { 'go', 'gomod', 'gosum', 'gowork', 'lua', 'luadoc' },
   callback = function()
     vim.treesitter.start()
+  end,
+})
+
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'markdown',
+  callback = function(args)
+    vim.diagnostic.enable(false, { bufnr = args.buf })
   end,
 })
 
