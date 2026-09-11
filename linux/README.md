@@ -46,31 +46,6 @@ omarchy-nvim-refresh
 This backs up `~/.config/nvim` (and its data/state/cache dirs) with a
 timestamp and reinstalls Omarchy's skel-seeded LazyVim config fresh.
 
-## nvim-omarchy-overrides (small patches on top of Omarchy's stock LazyVim)
-
-Separate from `linux/nvim` above — this isn't the full hand-rolled config,
-it's a handful of tweaks layered onto Omarchy's *own* LazyVim install
-(`~/.config/nvim`), for while it's still in use as-is:
-
-- `lua/plugins/grug-far-disable.lua` — disables grug-far.nvim (unused), which
-  frees up `<leader>sr`.
-- `lua/plugins/flash-char-current-line-only.lua` — flash.nvim's default
-  `char.multi_line = true` makes `f`/`F`/`t`/`T` highlight matches on every
-  visible line, not just the current one; this turns that off so `f`/`t`
-  behave like vanilla vim again (flash's `s`/`S` jump motions are untouched).
-- `lua/config/keymaps.lua` — rebinds `<leader>sr` to `Snacks.picker.resume()`
-  (stock default is `<leader>sR`) to match old Telescope muscle memory, and
-  adds `<F1>` to open `docs/keymap-cheatsheet.md`.
-- `lua/config/autocmds.lua` — disables diagnostics on markdown buffers.
-- `docs/keymap-cheatsheet.md` — an Action | Command reference for the
-  `<leader>s` (search/picker) group, since Snacks renamed/moved a lot of it
-  relative to Telescope. Opened with `<F1>`.
-
-`install-omarchy-overrides.sh` symlinks each of these onto the live
-`~/.config/nvim` (backing up anything already there). Re-run it after
-`omarchy-nvim-refresh`, since that reinstalls `~/.config/nvim` from scratch
-and would otherwise drop the symlinks.
-
 ## tmux
 
 `tmux/tmux.conf` is seeded from Omarchy's shipped default
@@ -79,18 +54,32 @@ hooks, and keybinding popup (`omarchy-menu-tmux-keybindings`) all still work.
 Only addition: `|`/`-` pane splits (matching the macOS config's convention),
 alongside Omarchy's own `v`/`h` bindings.
 
+## herdr
+
+`herdr/config.toml` is the day-to-day multiplexer config (Omarchy's own
+tmux-alternative) — prefix `ctrl+space`, `terminal` theme, and the split/tab
+keybindings tweaked from Omarchy's default. `herdr/confirm-close-pane.sh` and
+`herdr/confirm-close-tab.sh` back the `prefix+x`/`prefix+k` popup confirmations
+(`confirm_close = true`) wired up in `config.toml`.
+
+## bash
+
+`bashrc` is `~/.bashrc` as actually in use — sources Omarchy's own bash
+defaults, then personal aliases. Includes `alias clear='clear -x'`: plain
+`clear` sends the "erase scrollback" sequence (`\e[3J`), which herdr (unlike
+tmux) honors by wiping the pane's scrollback; `-x` skips that part.
+
+## git
+
+`git/config` is the global git config, at Omarchy's XDG path
+(`~/.config/git/config`, not `~/.gitconfig`).
+
 ## Setup
 
-Not yet wired into an install script — symlink manually for now:
-
 ```sh
-ln -sf ~/open-source/dotfiles/linux/nvim ~/.config/nvim
-ln -sf ~/open-source/dotfiles/linux/tmux/tmux.conf ~/.config/tmux/tmux.conf
+~/Work/dotfiles/linux/install.sh
 ```
 
-The overrides on top of Omarchy's *stock* nvim (the state actually in use
-right now, before any switch to the custom config above) do have a script:
-
-```sh
-~/open-source/dotfiles/linux/install-omarchy-overrides.sh
-```
+Symlinks `nvim`, `tmux/tmux.conf`, `bashrc`, `herdr/config.toml`, the two
+`herdr` confirm scripts, and `git/config` onto their live locations, backing
+up anything already there first.

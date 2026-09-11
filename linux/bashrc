@@ -1,0 +1,93 @@
+# Omarchy environment (OMARCHY_PATH + PATH), needed even for non-interactive shells
+[[ -r /usr/share/omarchy/default/bash/env-bootstrap ]] && source /usr/share/omarchy/default/bash/env-bootstrap
+
+# If not running interactively, don't do anything else (leave this above the rc source)
+[[ $- != *i* ]] && return
+
+# All the default Omarchy aliases and functions
+# (don't mess with these directly, just overwrite them here!)
+source "$OMARCHY_PATH/default/bash/rc"
+
+# Add your own exports, aliases, and functions here.
+#
+# Make an alias for invoking commands you use constantly
+# alias p='python'
+
+# Use the systemd-managed ssh-agent socket if the session didn't export one
+[[ -z "$SSH_AUTH_SOCK" && -S "$XDG_RUNTIME_DIR/ssh-agent.socket" ]] && export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
+
+alias nv='nvim'
+set -o vi
+
+# Plain `clear` sends the "erase scrollback" escape sequence (E3/\e[3J), and
+# herdr honors it by wiping its own pane scrollback -- so prefix+[ has
+# nothing to scroll back to. `-x` clears just the visible screen.
+alias clear='clear -x'
+
+# Git (extends Omarchy's own g/gcm/gcam/gcad/ga/gd shortcuts)
+alias gst='git status'
+alias gad='git add'
+alias gp='git push'
+alias gpsup='git push --set-upstream origin $(git branch --show-current)'
+alias gl='git pull'
+alias grb='git rebase'
+alias grbc='git rebase --continue'
+alias grba='git rebase --abort'
+alias gco='git checkout'
+alias gcom='git checkout main'
+
+# gsq [n]: interactive rebase to squash the last n commits (default 1)
+gsq() {
+  local n="${1:-1}"
+  git rebase -i "HEAD~${n}"
+}
+
+# Tab-completion for branch names on `git checkout` and `gco`.
+# (Omarchy's fzf completion.bash claims a generic path-completion for `git`
+# itself, so this re-registers git's real subcommand-aware completion after
+# it, which is why it has to be sourced here rather than earlier.)
+if [[ -f /usr/share/git/completion/git-completion.bash ]]; then
+  source /usr/share/git/completion/git-completion.bash
+  __git_complete g __git_main    # subcommands, then whatever that subcommand completes
+  __git_complete gco _git_checkout
+  __git_complete gad _git_add    # modified/untracked files
+  __git_complete gp _git_push    # remotes, refspecs
+  __git_complete gl _git_pull    # remotes, branches
+  __git_complete grb _git_rebase # branches
+fi
+
+# Fuzzy-search git shortcuts (Omarchy's + the ones above) and insert the
+# chosen one at the prompt for editing, rather than running it immediately.
+_omarchy_git_fzf() {
+  local picked mnemonic
+  picked=$(printf '%s\t%s\n' \
+    "g" "git" \
+    "gcm" "git commit -m \"message\"" \
+    "gcam" "git commit -a -m \"message\" (stage tracked + commit)" \
+    "gcad" "git commit -a --amend (stage tracked + amend)" \
+    "ga" "create worktree + branch, cd into it" \
+    "gd" "remove current worktree + branch" \
+    "gst" "git status" \
+    "gad" "git add" \
+    "gp" "git push" \
+    "gpsup" "git push --set-upstream origin <current branch>" \
+    "gl" "git pull" \
+    "grb" "git rebase" \
+    "grbc" "git rebase --continue" \
+    "grba" "git rebase --abort" \
+    "gsq" "git rebase -i HEAD~n (squash last n commits, default 1)" \
+    "gco" "git checkout" \
+    "gcom" "git checkout main" \
+    | fzf --delimiter='\t' --with-nth=1,2 --prompt='git> ' --height=40% --reverse)
+  [[ -z "$picked" ]] && return
+  mnemonic="${picked%%$'\t'*}"
+  case "$mnemonic" in
+    g | gcm | gcam | ga | gad | grb | gco) READLINE_LINE="$mnemonic " ;;
+    *) READLINE_LINE="$mnemonic" ;;
+  esac
+  READLINE_POINT=${#READLINE_LINE}
+}
+for _km in emacs vi-insert vi-command; do
+  bind -m "$_km" -x '"\C-fg": _omarchy_git_fzf'
+done
+unset _km
