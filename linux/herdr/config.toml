@@ -24,6 +24,9 @@ reload_config = "prefix+q"
 help = "prefix+?"
 detach = "prefix+d"
 
+cycle_pane_next="prefix+o"
+open_notification_target="prefix+i"
+
 # Copy mode
 copy_mode = "prefix+["
 

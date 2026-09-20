@@ -4,6 +4,11 @@
 # If not running interactively, don't do anything else (leave this above the rc source)
 [[ $- != *i* ]] && return
 
+# Vi keybindings. This must come BEFORE any `bind`/`bind -f` below: `bind`
+# writes to whichever keymap is active at the time, so binds made while still
+# in the default emacs keymap are invisible once vi mode takes over.
+set -o vi
+
 # All the default Omarchy aliases and functions
 # (don't mess with these directly, just overwrite them here!)
 source "$OMARCHY_PATH/default/bash/rc"
@@ -13,11 +18,18 @@ source "$OMARCHY_PATH/default/bash/rc"
 # Make an alias for invoking commands you use constantly
 # alias p='python'
 
+# Set C-p and C-n for command history
+bind '"\C-p": previous-history'
+bind '"\C-n": next-history'
+
+# Set Tab and Shift+Tab for cycling menu completion
+bind 'TAB: menu-complete'
+bind '"\e[Z": menu-complete-backward'
+
 # Use the systemd-managed ssh-agent socket if the session didn't export one
 [[ -z "$SSH_AUTH_SOCK" && -S "$XDG_RUNTIME_DIR/ssh-agent.socket" ]] && export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
 
 alias nv='nvim'
-set -o vi
 
 # Plain `clear` sends the "erase scrollback" escape sequence (E3/\e[3J), and
 # herdr honors it by wiping its own pane scrollback -- so prefix+[ has
